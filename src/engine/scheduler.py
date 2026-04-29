@@ -45,5 +45,12 @@ class BatchScheduler:
 
             batch_inputs = [req.input_data for req in batch]
 
-            # TODO: process batch and set result to future
-            pass
+            try:
+                batch_outputs = await asyncio.to_thread(self.model.batch_inference, batch_inputs)
+            except Exception as e:
+                for req in batch:
+                    req.future.set_exception(e)
+                continue
+
+            for req, res in zip(batch, batch_outputs):
+                req.future.set_result(res)
