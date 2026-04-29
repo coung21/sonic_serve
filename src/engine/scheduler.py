@@ -47,10 +47,14 @@ class BatchScheduler:
 
             try:
                 batch_outputs = await asyncio.to_thread(self.model.batch_inference, batch_inputs)
+
+                assert len(batch_outputs) == len(batch_inputs), "mismatched results length"
+
+                for req, res in zip(batch, batch_outputs):
+                    if not req.future.done():
+                        req.future.set_result(res)
+
             except Exception as e:
                 for req in batch:
                     req.future.set_exception(e)
-                continue
-
-            for req, res in zip(batch, batch_outputs):
-                req.future.set_result(res)
+                continue    
