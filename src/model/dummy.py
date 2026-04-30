@@ -1,6 +1,6 @@
 import time
 from typing import List, Any
-from base import BaseModel
+from .base import BaseModel
 
 class DummyModel(BaseModel):
     """ 

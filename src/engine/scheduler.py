@@ -3,7 +3,7 @@ from asyncio import Future
 import time
 from typing import Any, Optional, List
 from .request import Request
-from model.base import BaseModel
+from src.model.base import BaseModel
 
 
 class BatchScheduler:
