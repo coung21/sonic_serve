@@ -30,9 +30,13 @@ class BatchScheduler:
         start_time = time.monotonic()
         wait_for = start_time + self.max_delay_ms / 1000
 
+   
         while len(batch) < self.max_batch_size and time.monotonic() < wait_for:
             try:
-                next_req = await asyncio.wait_for(self._queue.get(), timeout=wait_for - time.monotonic())
+                remaining = wait_for - time.monotonic()
+                if remaining <= 0:
+                    break
+                next_req = await asyncio.wait_for(self._queue.get(), timeout=remaining)
                 batch.append(next_req)
             except asyncio.TimeoutError:
                 break
