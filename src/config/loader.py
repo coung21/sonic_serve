@@ -13,8 +13,8 @@ class SchedulerConfig(BaseModel):
     max_delay_ms: int = Field(..., gt=0, description="Maximum delay in milliseconds before inference")
 
 class ServerConfig(BaseModel):
-    port: int = Field(..., gt=1024, description="Port number for the server")
-    host: str = Field(..., description="Host name for the server")
+    port: int = Field(default=8000, description="Port number for the server")
+    host: str = Field(default="0.0.0.0", description="Host name for the server")
 
 class Config(BaseModel):
     model: ModelConfig
