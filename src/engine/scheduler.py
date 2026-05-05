@@ -14,8 +14,13 @@ class BatchScheduler:
         self.max_delay_ms = max_delay_ms
         self.max_queue_size = max_queue_size
         self._queue = asyncio.Queue()
+        self._shutting_down = False
+        self._stop_event = asyncio.Event()
 
     async def submit(self, input_data: Any) -> Future[Any]:
+        if self._shutting_down:
+            raise RuntimeError("Server is shutting down")
+
         fut = asyncio.get_running_loop().create_future()
         req = Request(input_data=input_data, future=fut, created_at=time.monotonic())
         
@@ -29,6 +34,8 @@ class BatchScheduler:
         batch = [] 
 
         first = await self._queue.get()
+        if first is None:
+            return batch
         batch.append(first)
 
 
@@ -42,6 +49,8 @@ class BatchScheduler:
                 if remaining <= 0:
                     break
                 next_req = await asyncio.wait_for(self._queue.get(), timeout=remaining)
+                if next_req is None:
+                    break
                 batch.append(next_req)
             except asyncio.TimeoutError:
                 break
@@ -49,8 +58,11 @@ class BatchScheduler:
         return batch
 
     async def run(self) -> None:
-        while True:
+        while not self._stop_event.is_set():
             batch = await self._collect_batch()
+
+            if not batch:
+                continue
 
             batch_inputs = [req.input_data for req in batch]
 
@@ -67,3 +79,16 @@ class BatchScheduler:
                 for req in batch:
                     req.future.set_exception(e)
                 continue    
+
+    async def shutdown(self):
+        self._shutting_down = True
+        
+        while not self._queue.empty():
+            await asyncio.sleep(1)
+            
+        self._stop_event.set()
+        
+        try:
+            self._queue.put_nowait(None)
+        except asyncio.QueueFull:
+            pass

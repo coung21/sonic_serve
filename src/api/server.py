@@ -44,7 +44,8 @@ def create_app(config):
     async def lifespan(app: FastAPI):
         task = asyncio.create_task(scheduler.run())
         yield
-        task.cancel()
+        await scheduler.shutdown()
+        await task
 
     app = FastAPI(lifespan=lifespan)
     app.state.scheduler = scheduler
