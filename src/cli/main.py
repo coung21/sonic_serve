@@ -1,5 +1,5 @@
 import argparse
-from . import serve
+from . import serve, check
 from src.utils.logger import setup_logger
 
 def main():
@@ -7,6 +7,7 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     subparsers = parser.add_subparsers(dest="command", required=True)
     serve.add_subparser(subparsers)
+    check.add_subparser(subparsers)
 
     args = parser.parse_args()
     

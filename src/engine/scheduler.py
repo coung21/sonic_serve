@@ -7,6 +7,7 @@ from .exceptions import QueueFullError
 from src.model.base import BaseModel
 
 
+
 class BatchScheduler:
     def __init__(self, model: BaseModel, max_batch_size: int,max_delay_ms: float, max_queue_size: int):
         self.model = model
