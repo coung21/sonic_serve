@@ -6,6 +6,7 @@ from src.model.dummy import DummyModel
 from src.engine.scheduler import BatchScheduler
 from .routes import create_routes
 from src.utils.importing import import_class
+from src.model.factory import create_model
 
 
 
@@ -29,8 +30,8 @@ from src.utils.importing import import_class
 from contextlib import asynccontextmanager
 
 def create_app(config):
-    model_class = import_class(config.model.class_path)
-    model = model_class(**config.model.init_kwargs)
+    model = create_model(config.model)
+        
     scheduler = BatchScheduler(
         model=model,
         max_batch_size=config.scheduler.max_batch_size,
