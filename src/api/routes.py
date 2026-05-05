@@ -1,19 +1,21 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, FastAPI
 from .schemas import InferenceRequest, InferenceResponse
-import asyncio
+from src.engine.exceptions import QueueFullError
 
 def create_routes(app: FastAPI, scheduler):
     router = APIRouter()
 
     @router.post("/inference", response_model=InferenceResponse)
     async def inference_handler(request: InferenceRequest):
-        future = await scheduler.submit(request.data)
-
         try:
+            future = await scheduler.submit(request.data)
             result = await asyncio.wait_for(future, timeout=10.0)
             return InferenceResponse(results=result)
         except asyncio.TimeoutError:
             raise HTTPException(status_code=504, detail="Inference timeout")
+        except QueueFullError:
+            raise HTTPException(status_code=503, detail="Queue is full")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 

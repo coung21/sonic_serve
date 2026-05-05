@@ -57,6 +57,9 @@ def load_config(file_path: str | Path) -> Config:
 
 
 if __name__ == '__main__':
+    from src.utils.logger import get_logger, setup_logger
+    setup_logger(debug=True)
+    logger = get_logger(__name__)
     config = load_config("./src/config/default.yaml")
-    print(config)
+    logger.info(f"Loaded config: {config}")
     

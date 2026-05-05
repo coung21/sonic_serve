@@ -3,19 +3,24 @@ from asyncio import Future
 import time
 from typing import Any, Optional, List
 from .request import Request
+from .exceptions import QueueFullError
 from src.model.base import BaseModel
 
 
 class BatchScheduler:
-    def __init__(self, model: BaseModel, max_batch_size: int,max_delay_ms: float):
+    def __init__(self, model: BaseModel, max_batch_size: int,max_delay_ms: float, max_queue_size: int):
         self.model = model
         self.max_batch_size = max_batch_size
         self.max_delay_ms = max_delay_ms
+        self.max_queue_size = max_queue_size
         self._queue = asyncio.Queue()
 
     async def submit(self, input_data: Any) -> Future[Any]:
         fut = asyncio.get_running_loop().create_future()
         req = Request(input_data=input_data, future=fut, created_at=time.monotonic())
+        
+        if self._queue.qsize() >= self.max_queue_size:
+            raise QueueFullError("Queue is full")
 
         await self._queue.put(req)
         return fut

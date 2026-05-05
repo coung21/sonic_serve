@@ -10,6 +10,7 @@ from src.model.factory import create_model
 
 
 
+
 # @app.on_event("startup")
 # async def startup():
 #     default_config_path = Path(__file__).parent.parent / "config" / "default.yaml"
@@ -36,6 +37,7 @@ def create_app(config):
         model=model,
         max_batch_size=config.scheduler.max_batch_size,
         max_delay_ms=config.scheduler.max_delay_ms,
+        max_queue_size=config.scheduler.max_queue_size,
     )
 
     @asynccontextmanager

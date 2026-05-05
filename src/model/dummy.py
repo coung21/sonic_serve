@@ -4,6 +4,9 @@ try:
     from .base import BaseModel
 except ImportError:
     from base import BaseModel
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class DummyModel(BaseModel):
     """ 
@@ -15,7 +18,7 @@ class DummyModel(BaseModel):
         super().__init__()
     
     def batch_inference(self, batch_inputs: List[Any]) -> List[Any]:
-        print(f"DummyModel: Processing batch of {len(batch_inputs)} inputs")
+        logger.info(f"DummyModel: Processing batch of {len(batch_inputs)} inputs")
         time.sleep(0.05)
         
         outputs = []
@@ -30,8 +33,10 @@ class DummyModel(BaseModel):
 
 
 if __name__ == "__main__":
+    from src.utils.logger import setup_logger
+    setup_logger(debug=True)
     model = DummyModel()
     result = model.batch_inference([1, 2, 3])
     
     assert result == [2, 4, 6], f"Expected [2, 4, 6] but got {result}"
-    print("DummyModel test passed!")
+    logger.info("DummyModel test passed!")

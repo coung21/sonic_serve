@@ -13,7 +13,11 @@ def import_class(class_path: str):
 if __name__ == '__main__':
     import sys
     from pathlib import Path
+    from src.utils.logger import get_logger, setup_logger
+    setup_logger(debug=True)
+    logger = get_logger(__name__)
+
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     
     model_class = import_class("src.model.dummy.DummyModel")
-    print(model_class)
+    logger.info(model_class)
