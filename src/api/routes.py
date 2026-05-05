@@ -20,6 +20,12 @@ def create_routes(app: FastAPI, scheduler):
             raise HTTPException(status_code=500, detail=str(e))
 
 
+    @router.get("/ready")
+    async def ready_check(app: FastAPI):
+        if app.state.scheduler.is_ready():
+            return {"status": "ready"}
+        raise HTTPException(status_code=503, detail="Server is not ready")
+
     @router.get("/health")
     async def health_check():
         return {"status": "ok"}

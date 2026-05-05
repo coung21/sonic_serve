@@ -17,6 +17,7 @@ class BatchScheduler:
         self._queue = asyncio.Queue()
         self._shutting_down = False
         self._stop_event = asyncio.Event()
+        self._ready = False
 
     async def submit(self, input_data: Any) -> Future[Any]:
         if self._shutting_down:
@@ -59,6 +60,9 @@ class BatchScheduler:
         return batch
 
     async def run(self) -> None:
+        self._ready = True
+        logger.info("Scheduler is ready to process requests")
+        
         while not self._stop_event.is_set():
             batch = await self._collect_batch()
 
@@ -93,3 +97,6 @@ class BatchScheduler:
             self._queue.put_nowait(None)
         except asyncio.QueueFull:
             pass
+
+    def is_ready(self):
+        return self._ready and not self._shutting_down
