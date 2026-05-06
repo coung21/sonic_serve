@@ -15,7 +15,7 @@ def dummy_model():
 
 @pytest.fixture
 def scheduler(dummy_model):
-    return BatchScheduler(model=dummy_model, max_batch_size=4, max_delay_ms=1000)
+    return BatchScheduler(model=dummy_model, max_batch_size=4, max_delay_ms=1000, max_queue_size=1000)
 
 
 

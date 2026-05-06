@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Any
+from typing import List, Any, Union
+
 
 class BaseModel(ABC):
 
     @abstractmethod
-    def batch_inference(self, inputs: List[Any]) -> List[Any]:
+    def batch_inference(self, inputs: List[Any]) -> List[Union[Any, Exception]]:
         """
         Run inference on a batch of individual inputs.
 
@@ -18,9 +19,9 @@ class BaseModel(ABC):
                 the list is guaranteed to be between 1 and ``max_batch_size``.
 
         Returns:
-            A list of inference outputs, **one per input item**, in the same
-            order as the input list.  Every item in the output list
-            corresponds to the input at the same index.
+            A list of inference outputs, one per input item, in the same order.
+            Each element can be either a result (Any) or an Exception to indicate
+            failure for that specific request.  
 
         Raises:
             Any exception raised by this method will be caught by the engine

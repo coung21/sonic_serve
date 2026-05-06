@@ -6,7 +6,9 @@ from .request import Request
 from .exceptions import QueueFullError
 from src.model.base import BaseModel
 
+from src.utils.logger import get_logger
 
+logger = get_logger(__name__)
 
 class BatchScheduler:
     def __init__(self, model: BaseModel, max_batch_size: int,max_delay_ms: float, max_queue_size: int):
@@ -73,16 +75,18 @@ class BatchScheduler:
 
             try:
                 batch_outputs = await asyncio.to_thread(self.model.batch_inference, batch_inputs)
-
                 assert len(batch_outputs) == len(batch_inputs), "mismatched results length"
 
                 for req, res in zip(batch, batch_outputs):
                     if not req.future.done():
-                        req.future.set_result(res)
-
+                        if isinstance(res, Exception):
+                            req.future.set_exception(res)
+                        else:
+                            req.future.set_result(res)
             except Exception as e:
                 for req in batch:
-                    req.future.set_exception(e)
+                    if not req.future.done():
+                        req.future.set_exception(e)
                 continue    
 
     async def shutdown(self):

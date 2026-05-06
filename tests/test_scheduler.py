@@ -155,7 +155,7 @@ async def test_scheduler_run_handles_model_exceptions():
         def batch_inference(self, batch):
             raise ValueError("CUDA out of memory error!")
 
-    bad_scheduler = BatchScheduler(model=BadModel(), max_batch_size=2, max_delay_ms=100)
+    bad_scheduler = BatchScheduler(model=BadModel(), max_batch_size=2, max_delay_ms=100, max_queue_size=1000)
     task = asyncio.create_task(bad_scheduler.run())
 
     try:
@@ -179,7 +179,7 @@ async def test_scheduler_run_handles_mismatched_length():
             # Model error: always returns 1 result regardless of input size
             return ["wrong output"]
 
-    bad_scheduler = BatchScheduler(model=MismatchedModel(), max_batch_size=4, max_delay_ms=100)
+    bad_scheduler = BatchScheduler(model=MismatchedModel(), max_batch_size=4, max_delay_ms=100, max_queue_size=1000)
     task = asyncio.create_task(bad_scheduler.run())
 
     try:
@@ -192,5 +192,38 @@ async def test_scheduler_run_handles_mismatched_length():
             
         with pytest.raises(AssertionError, match="mismatched results length"):
             await fut2
+    finally:
+        task.cancel()
+
+
+@pytest.mark.asyncio
+async def test_error_isolation():
+    """
+    Ensure that if batch_inference returns an Exception for a specific input, 
+    only that corresponding future receives the exception, and the rest receive their results.
+    """
+    class IsolatedErrorModel:
+        def batch_inference(self, batch):
+            results = []
+            for item in batch:
+                if item == "bad_input":
+                    results.append(ValueError("Isolated error"))
+                else:
+                    results.append(f"Processed {item}")
+            return results
+
+    scheduler = BatchScheduler(model=IsolatedErrorModel(), max_batch_size=4, max_delay_ms=100, max_queue_size=1000)
+    task = asyncio.create_task(scheduler.run())
+
+    try:
+        fut_good1 = await scheduler.submit("good1")
+        fut_bad = await scheduler.submit("bad_input")
+        fut_good2 = await scheduler.submit("good2")
+
+        assert await fut_good1 == "Processed good1"
+        assert await fut_good2 == "Processed good2"
+
+        with pytest.raises(ValueError, match="Isolated error"):
+            await fut_bad
     finally:
         task.cancel()

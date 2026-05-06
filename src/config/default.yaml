@@ -1,12 +1,33 @@
 model: 
+  # Option 1: Custom code model
   class_path: "src.model.dummy.DummyModel"
   init_kwargs: {}
 
+  # Option 2: No-code model
+  # type: "torchscript"
+  # path: "artifacts/model.pt"
+
+  # General model settings
+  device: "cpu"
+  # input_shape: [1, 224, 224]
+  input_shape: null
+  framework_kwargs: {}
+
 scheduler:
   max_batch_size: 8
-  max_delay_ms: 50
+  max_delay_ms: 50.0
+  max_queue_size: 1000
+  
+  # Adaptive Batching Settings
+  adaptive: false
+  target_latency_ms: 100.0
+  min_delay_ms: 5.0
+  max_delay_ms_cap: 500.0
+  pid_kp: 0.1
+  pid_ki: 0.01
+  pid_kd: 0.05
 
 server:
-  port: 8000
   host: "0.0.0.0"
-  
+  port: 8000
+  request_timeout: 30
