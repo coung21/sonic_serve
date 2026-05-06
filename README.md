@@ -2,6 +2,6 @@
 
 ## ZonicML
 
-**Efficient, Scalable and Easy to Use Inference Framework**
+**Efficient and Easy to Use Inference Framework**
  
  
